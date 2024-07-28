@@ -152,12 +152,17 @@ fn app() -> Result<(), anyhow::Error> {
                 person,
             } => {
                 tracing::info!("Adding a new expense");
+
+                // Load the person's income from the account
+                let mut p = person.clone();
+                p.load_income_from_account(&account);
+
                 let expense = models::Expense {
                     description: description.to_string(),
                     amount: *amount,
                     date: date.to_string(),
                     monthly: *monthly,
-                    person: person.clone(),
+                    person: p,
                 };
 
                 account.expenses.push(expense);

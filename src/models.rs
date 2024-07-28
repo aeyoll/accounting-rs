@@ -9,13 +9,20 @@ pub struct Person {
     pub income: f64,
 }
 
+impl Person {
+    // Load the person's income from the account
+    pub fn load_income_from_account(&mut self, account: &Account) {
+        self.income = account.persons.iter().find(|p| p.name == self.name).unwrap().income;
+    }
+}
+
 impl FromStr for Person {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let person: Person = Person {
             name: s.to_string(),
-            income: 0.0,
+            income: f64::default(),
         };
 
         Ok(person)
