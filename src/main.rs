@@ -1,91 +1,15 @@
-use crate::models::{Account, Person};
-use clap::{Parser, Subcommand};
+use crate::cli::{
+    AccountCommands, BalanceCommands, Cli, Commands, ExpenseCommands, PersonCommands,
+};
+use crate::models::Account;
+use clap::Parser;
 use std::process;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 
+mod cli;
 mod handlers;
 mod models;
-
-#[derive(Parser)]
-#[command(author, version, about, long_about = None)]
-struct Cli {
-    #[command(subcommand)]
-    pub command: Commands,
-}
-
-#[derive(Subcommand)]
-enum Commands {
-    Account {
-        #[command(subcommand)]
-        subcommand: AccountCommands,
-    },
-    Person {
-        #[command(subcommand)]
-        subcommand: PersonCommands,
-    },
-    Expense {
-        #[command(subcommand)]
-        subcommand: ExpenseCommands,
-    },
-    Balance {
-        #[command(subcommand)]
-        subcommand: BalanceCommands,
-    },
-}
-
-#[derive(Subcommand)]
-enum AccountCommands {
-    #[command()]
-    Add {
-        #[arg(short, long)]
-        name: String,
-    },
-    #[command()]
-    Show,
-}
-
-#[derive(Subcommand)]
-enum PersonCommands {
-    #[command()]
-    Add {
-        #[arg(short, long)]
-        name: String,
-
-        #[arg(short, long)]
-        income: f64,
-    },
-    #[command()]
-    List,
-}
-
-#[derive(Subcommand)]
-enum ExpenseCommands {
-    #[command()]
-    Add {
-        #[arg(long)]
-        description: String,
-        #[arg(long)]
-        amount: f64,
-        #[arg(long)]
-        date: String,
-        #[arg(long, action = clap::ArgAction::SetTrue)]
-        monthly: bool,
-        #[arg(long)]
-        person: Person,
-    },
-    #[command()]
-    List,
-}
-
-#[derive(Subcommand)]
-enum BalanceCommands {
-    #[command()]
-    Show {
-        #[arg(long)]
-        date: String,
-    },
-}
 
 fn app() -> Result<(), anyhow::Error> {
     let cli = Cli::parse();
