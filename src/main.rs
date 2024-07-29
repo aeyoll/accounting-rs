@@ -99,11 +99,13 @@ fn app() -> Result<(), anyhow::Error> {
         .init();
 
     // Load the account model from an account.json file
-    let mut account = Account::load_from_file()?;
+    let account = Account::load_from_file()?;
 
     match &cli.command {
         Commands::Account { subcommand } => match subcommand {
             AccountCommands::Add { name } => {
+                tracing::info!("Creating a new account with name: {}", name);
+
                 match handlers::account::handle_account_add(account, name) {
                     Ok(_) => {
                         tracing::info!("Account created successfully");
@@ -119,6 +121,8 @@ fn app() -> Result<(), anyhow::Error> {
 
         Commands::Person { subcommand } => match subcommand {
             PersonCommands::Add { name, income } => {
+                tracing::info!("Adding a new person");
+
                 match handlers::person::handle_person_add(account, name, income) {
                     Ok(_) => {
                         tracing::info!("Person added successfully");
@@ -142,20 +146,14 @@ fn app() -> Result<(), anyhow::Error> {
             } => {
                 tracing::info!("Adding a new expense");
 
-                // Load the person's income from the account
-                let mut p = person.clone();
-                p.load_income_from_account(&account);
-
-                let expense = models::Expense {
-                    description: description.to_string(),
-                    amount: *amount,
-                    date: date.to_string(),
-                    monthly: *monthly,
-                    person: p,
-                };
-
-                account.expenses.push(expense);
-                match account.save() {
+                match handlers::expense::handle_expense_add(
+                    account,
+                    description,
+                    amount,
+                    date,
+                    monthly,
+                    person,
+                ) {
                     Ok(_) => {
                         tracing::info!("Expense added successfully");
                     }

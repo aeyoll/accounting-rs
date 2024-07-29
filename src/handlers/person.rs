@@ -7,7 +7,6 @@ pub fn handle_person_add(
     name: &String,
     income: &f64,
 ) -> Result<(), anyhow::Error> {
-    tracing::info!("Adding a new person");
     let person = Person {
         name: name.to_string(),
         income: *income,
