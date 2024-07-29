@@ -1,5 +1,4 @@
 use crate::models::{Account, Person};
-use clap::builder::TypedValueParser;
 use clap::{Parser, Subcommand};
 use std::process;
 use tracing_subscriber::layer::SubscriberExt;
@@ -43,7 +42,7 @@ enum AccountCommands {
         name: String,
     },
     #[command()]
-    List,
+    Show,
 }
 
 #[derive(Subcommand)]
@@ -115,9 +114,7 @@ fn app() -> Result<(), anyhow::Error> {
                     }
                 }
             }
-            AccountCommands::List => {
-                todo!("Implement the list command");
-            }
+            AccountCommands::Show => handlers::account::handle_account_show(account),
         },
 
         Commands::Person { subcommand } => match subcommand {
