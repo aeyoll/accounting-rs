@@ -87,9 +87,7 @@ fn app() -> Result<(), anyhow::Error> {
                     }
                 }
             }
-            ExpenseCommands::List => {
-                todo!("Implement the list command");
-            }
+            ExpenseCommands::List => handlers::expense::handle_expense_list(account),
         },
 
         Commands::Balance { subcommand } => match subcommand {
