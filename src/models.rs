@@ -12,7 +12,12 @@ pub struct Person {
 impl Person {
     // Load the person's income from the account
     pub fn load_income_from_account(&mut self, account: &Account) {
-        self.income = account.persons.iter().find(|p| p.name == self.name).unwrap().income;
+        self.income = account
+            .persons
+            .iter()
+            .find(|p| p.name == self.name)
+            .unwrap()
+            .income;
     }
 }
 
@@ -53,13 +58,11 @@ impl Account {
             .unwrap_or_else(|_err| std::fs::File::create(ACCOUNT_FILE).unwrap());
 
         let account: Account = match serde_json::from_reader(file) {
-            Ok(account) => {
-                account
-            },
+            Ok(account) => account,
             Err(err) => {
                 tracing::error!("Error loading account from file {:?}", err);
                 Account::default()
-            },
+            }
         };
 
         Ok(account)
