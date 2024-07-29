@@ -136,9 +136,7 @@ fn app() -> Result<(), anyhow::Error> {
                     }
                 }
             }
-            PersonCommands::List => {
-                todo!("Implement the list command");
-            }
+            PersonCommands::List => handlers::person::handle_person_list(account),
         },
 
         Commands::Expense { subcommand } => match subcommand {
