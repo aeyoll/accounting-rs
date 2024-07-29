@@ -1,6 +1,21 @@
-use crate::models::Account;
+use crate::models::{Account, Person};
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::{ContentArrangement, Table};
+
+pub fn handle_person_add(
+    mut account: Account,
+    name: &String,
+    income: &f64,
+) -> Result<(), anyhow::Error> {
+    tracing::info!("Adding a new person");
+    let person = Person {
+        name: name.to_string(),
+        income: *income,
+    };
+
+    account.persons.push(person);
+    account.save()
+}
 
 pub fn handle_person_list(account: Account) {
     let mut table = Table::new();

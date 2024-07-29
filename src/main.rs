@@ -119,14 +119,7 @@ fn app() -> Result<(), anyhow::Error> {
 
         Commands::Person { subcommand } => match subcommand {
             PersonCommands::Add { name, income } => {
-                tracing::info!("Adding a new person");
-                let person = Person {
-                    name: name.to_string(),
-                    income: *income,
-                };
-
-                account.persons.push(person);
-                match account.save() {
+                match handlers::person::handle_person_add(account, name, income) {
                     Ok(_) => {
                         tracing::info!("Person added successfully");
                     }
