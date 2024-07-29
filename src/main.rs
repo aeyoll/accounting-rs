@@ -10,6 +10,7 @@ use tracing_subscriber::util::SubscriberInitExt;
 mod cli;
 mod handlers;
 mod models;
+mod validators;
 
 fn app() -> Result<(), anyhow::Error> {
     let cli = Cli::parse();
