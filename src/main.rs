@@ -4,6 +4,8 @@ use std::io;
 mod cli;
 mod handlers;
 mod models;
+mod selected_tab;
+mod tab_widget;
 mod tui;
 mod validators;
 
