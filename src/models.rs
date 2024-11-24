@@ -57,13 +57,10 @@ impl Account {
         let file = std::fs::File::open(ACCOUNT_FILE)
             .unwrap_or_else(|_err| std::fs::File::create(ACCOUNT_FILE).unwrap());
 
-        let account: Account = match serde_json::from_reader(file) {
-            Ok(account) => account,
-            Err(err) => {
-                tracing::error!("Error loading account from file {:?}", err);
-                Account::default()
-            }
-        };
+        let account: Account = serde_json::from_reader(file).unwrap_or_else(|err| {
+            tracing::error!("Error loading account from file {:?}", err);
+            Account::default()
+        });
 
         Ok(account)
     }

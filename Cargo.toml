@@ -13,3 +13,6 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing = "0.1.40"
 comfy-table = "7.1.1"
 chrono = "0.4"
+ratatui = "0.29.0"
+crossterm = "0.28.1"
+strum = "0.26.3"
