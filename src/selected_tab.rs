@@ -1,14 +1,15 @@
 use crate::models::Account;
-use crate::tab_widget::TabWidget;
+use crate::tab_widget::{PeopleViewState, TabWidget};
 use ratatui::buffer::Buffer;
+use ratatui::layout::Constraint;
 use ratatui::layout::Rect;
 use ratatui::prelude::{Color, Line, Span, Style, Stylize, Text, Widget};
 use ratatui::style::palette::tailwind;
 use ratatui::symbols;
-use ratatui::widgets::{Block, Borders, List, ListItem, Padding, Paragraph};
+use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Padding, Paragraph};
 use strum::{Display, EnumIter, FromRepr};
 
-#[derive(Default, Clone, Copy, Display, FromRepr, EnumIter)]
+#[derive(Default, Clone, Copy, Display, PartialEq, FromRepr, EnumIter)]
 pub enum SelectedTab {
     #[default]
     #[strum(to_string = "Account")]
@@ -23,14 +24,14 @@ pub enum SelectedTab {
 
 impl SelectedTab {
     /// Get the previous tab, if there is no previous tab return the current tab.
-    pub(crate) fn previous(self) -> Self {
+    pub fn previous(self) -> Self {
         let current_index: usize = self as usize;
         let previous_index = current_index.saturating_sub(1);
         Self::from_repr(previous_index).unwrap_or(self)
     }
 
     /// Get the next tab, if there is no next tab return the current tab.
-    pub(crate) fn next(self) -> Self {
+    pub fn next(self) -> Self {
         let current_index = self as usize;
         let next_index = current_index.saturating_add(1);
         Self::from_repr(next_index).unwrap_or(self)
@@ -41,7 +42,13 @@ impl<'a> Widget for TabWidget<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         match self.tab {
             SelectedTab::Account => self.tab.render_account(area, buf, &self.state.account),
-            SelectedTab::People => self.tab.render_people(area, buf, &self.state.account),
+            SelectedTab::People => self.tab.render_people(
+                area,
+                buf,
+                &self.state.account,
+                &self.state.people_list_state,
+                &self.state.people_view_state,
+            ),
             SelectedTab::Expenses => self.tab.render_expenses(area, buf, &self.state.account),
             SelectedTab::Balance => self.tab.render_balance(area, buf, &self.state.account),
         }
@@ -50,30 +57,69 @@ impl<'a> Widget for TabWidget<'a> {
 
 impl SelectedTab {
     /// Return tab's name as a styled `Line`
-    pub(crate) fn title(self) -> Line<'static> {
+    pub fn title(self) -> Line<'static> {
         format!("  {self}  ")
             .fg(tailwind::SLATE.c200)
             .bg(self.palette().c900)
             .into()
     }
 
-    fn render_people(&self, area: Rect, buf: &mut Buffer, account: &Account) {
-        let title = self.title();
-        title.render(area, buf);
+    /// Render the people tab
+    fn render_people(
+        &self,
+        area: Rect,
+        buf: &mut Buffer,
+        account: &Account,
+        list_state: &ListState,
+        view_state: &PeopleViewState,
+    ) {
+        match view_state {
+            PeopleViewState::List => {
+                use ratatui::widgets::{Row, Table};
 
-        let items: Vec<ListItem> = account
-            .persons
-            .iter()
-            .map(|p| {
-                ListItem::new(Line::from(vec![
-                    Span::raw(&p.name),
-                    Span::raw(" - "),
-                    Span::raw(p.income.to_string()),
-                ]))
-            })
-            .collect();
+                let header = Row::new(vec!["Name".bold(), "Income".bold()]);
 
-        List::new(items).block(self.block()).render(area, buf);
+                let rows: Vec<Row> = account
+                    .persons
+                    .iter()
+                    .map(|p| Row::new(vec![p.name.clone(), format!("{:.2}€", p.income)]))
+                    .collect();
+
+                Table::new(
+                    rows,
+                    [Constraint::Percentage(50), Constraint::Percentage(50)],
+                )
+                .header(header)
+                .block(self.block())
+                .row_highlight_style(Style::default().bg(tailwind::YELLOW.c500))
+                .highlight_symbol("→ ")
+                .render(area, buf);
+            }
+            PeopleViewState::EditForm => {
+                // Existing edit form code remains unchanged
+                if let Some(selected) = list_state.selected() {
+                    if let Some(person) = account.persons.get(selected) {
+                        let form = vec![
+                            Line::from(vec![
+                                Span::raw("Name: "),
+                                Span::styled(&person.name, Style::default().fg(Color::Yellow)),
+                            ]),
+                            Line::from(vec![
+                                Span::raw("Income: "),
+                                Span::styled(
+                                    person.income.to_string(),
+                                    Style::default().fg(Color::Yellow),
+                                ),
+                            ]),
+                        ];
+
+                        Paragraph::new(form)
+                            .block(Block::default().title("Edit Person").borders(Borders::ALL))
+                            .render(area, buf);
+                    }
+                }
+            }
+        }
     }
 
     fn render_expenses(&self, area: Rect, buf: &mut Buffer, account: &Account) {
@@ -138,7 +184,7 @@ impl SelectedTab {
             .border_style(self.palette().c700)
     }
 
-    pub(crate) const fn palette(self) -> tailwind::Palette {
+    pub const fn palette(self) -> tailwind::Palette {
         match self {
             Self::Account => tailwind::GRAY,
             Self::People => tailwind::YELLOW,

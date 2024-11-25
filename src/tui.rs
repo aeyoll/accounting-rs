@@ -1,12 +1,12 @@
 use crate::models::Account;
 use crate::selected_tab::SelectedTab;
-use crate::tab_widget::TabWidget;
+use crate::tab_widget::{PeopleViewState, TabWidget};
 use crossterm::event;
 use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::buffer::Buffer;
 use ratatui::style::{Color, Stylize};
 use ratatui::text::Line;
-use ratatui::widgets::Widget;
+use ratatui::widgets::{ListState, Widget};
 use ratatui::{
     layout::{Constraint, Layout, Rect},
     widgets::Tabs,
@@ -27,6 +27,21 @@ fn render_footer(area: Rect, buf: &mut Buffer) {
 
 pub struct AppState {
     pub account: Account,
+    pub people_list_state: ListState,
+    pub people_view_state: PeopleViewState,
+}
+
+impl AppState {
+    fn new(account: Account) -> Self {
+        let mut people_list_state = ListState::default();
+        people_list_state.select(Some(0)); // Select first item by default
+
+        Self {
+            account,
+            people_list_state,
+            people_view_state: PeopleViewState::default(),
+        }
+    }
 }
 
 pub struct App {
@@ -38,9 +53,7 @@ pub struct App {
 impl App {
     pub fn new() -> Result<App, anyhow::Error> {
         Ok(App {
-            state: AppState {
-                account: Account::load_from_file()?,
-            },
+            state: AppState::new(Account::load_from_file()?),
             selected_tab: SelectedTab::Account,
             exit: false,
         })
@@ -82,6 +95,35 @@ impl App {
                     SelectedTab::People => SelectedTab::Expenses,
                     SelectedTab::Expenses => SelectedTab::Balance,
                     SelectedTab::Balance => SelectedTab::Account,
+                }
+            }
+            KeyCode::Up if self.selected_tab == SelectedTab::People => {
+                if let PeopleViewState::List = self.state.people_view_state {
+                    let current = self.state.people_list_state.selected().unwrap_or(0);
+                    self.state
+                        .people_list_state
+                        .select(Some(current.saturating_sub(1)));
+                }
+            }
+            KeyCode::Down if self.selected_tab == SelectedTab::People => {
+                if let PeopleViewState::List = self.state.people_view_state {
+                    let current = self.state.people_list_state.selected().unwrap_or(0);
+                    let max = self.state.account.persons.len().saturating_sub(1);
+                    self.state
+                        .people_list_state
+                        .select(Some(current.saturating_add(1).min(max)));
+                }
+            }
+            KeyCode::Enter if self.selected_tab == SelectedTab::People => {
+                if let PeopleViewState::List = self.state.people_view_state {
+                    if self.state.people_list_state.selected().is_some() {
+                        self.state.people_view_state = PeopleViewState::EditForm;
+                    }
+                }
+            }
+            KeyCode::Esc if self.selected_tab == SelectedTab::People => {
+                if let PeopleViewState::EditForm = self.state.people_view_state {
+                    self.state.people_view_state = PeopleViewState::List;
                 }
             }
             _ => {}
