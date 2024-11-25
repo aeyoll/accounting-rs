@@ -1,3 +1,4 @@
+use std::cmp::PartialEq;
 use crate::models::Account;
 use crate::selected_tab::SelectedTab;
 use crate::tab_widget::{PeopleViewState, TabWidget};
@@ -19,10 +20,25 @@ fn render_title(area: Rect, buf: &mut Buffer) {
     "Accounting".bold().render(area, buf);
 }
 
-fn render_footer(area: Rect, buf: &mut Buffer) {
-    Line::raw("◄ ► to change tab | Press q to quit")
-        .centered()
-        .render(area, buf);
+const INFO_TEXT: [&str; 2] = ["◄ ► to change tab", "Press q to quit"];
+const PEOPLE_INFO_TEXT: [&str; 5] = [
+    "(↑) Move up",
+    "(↓) Move down",
+    "(Enter) Edit",
+    "(Esc) Cancel",
+    "Press q to quit",
+];
+
+fn render_footer(area: Rect, buf: &mut Buffer, selected_tab: SelectedTab) {
+    if selected_tab == SelectedTab::People {
+        Line::raw(PEOPLE_INFO_TEXT.join(" | "))
+            .centered()
+            .render(area, buf);
+    } else {
+        Line::raw(INFO_TEXT.join(" | "))
+            .centered()
+            .render(area, buf);
+    }
 }
 
 pub struct AppState {
@@ -167,11 +183,11 @@ impl Widget for &App {
 
         render_title(title_area, buf);
         self.render_tabs(tabs_area, buf);
-        TabWidget {
+        let tab_widget = TabWidget {
             tab: self.selected_tab,
             state: &self.state,
         }
         .render(inner_area, buf);
-        render_footer(footer_area, buf);
+        render_footer(footer_area, buf, self.selected_tab);
     }
 }
