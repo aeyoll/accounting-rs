@@ -1,2 +1,2 @@
-pub mod people_table;
+pub mod person_table;
 pub mod table_colors;

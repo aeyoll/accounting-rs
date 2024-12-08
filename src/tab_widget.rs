@@ -1,9 +1,8 @@
 use crate::selected_tab::SelectedTab;
 use crate::tui::AppState;
 
-// Add this new enum to handle different view states
 #[derive(Default)]
-pub enum PeopleViewState {
+pub enum PersonViewState {
     #[default]
     List,
     EditForm,

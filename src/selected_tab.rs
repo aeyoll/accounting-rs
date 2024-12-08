@@ -1,6 +1,6 @@
 use crate::models::Account;
-use crate::tab_widget::{PeopleViewState, TabWidget};
-use crate::tables::people_table::PeopleTable;
+use crate::tab_widget::{PersonViewState, TabWidget};
+use crate::tables::person_table::PersonTable;
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::prelude::{Color, Line, Span, Style, Stylize, Text, Widget};
@@ -12,8 +12,8 @@ use strum::{Display, EnumIter, FromRepr};
 #[derive(Default, Clone, Copy, Display, PartialEq, FromRepr, EnumIter)]
 pub enum SelectedTab {
     #[default]
-    #[strum(to_string = "People")]
-    People,
+    #[strum(to_string = "Person")]
+    Person,
     #[strum(to_string = "Expenses")]
     Expenses,
     #[strum(to_string = "Balance")]
@@ -41,12 +41,12 @@ impl SelectedTab {
 impl<'a> Widget for TabWidget<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         match self.tab {
-            SelectedTab::People => self.tab.render_people(
+            SelectedTab::Person => self.tab.render_person(
                 area,
                 buf,
                 &self.state.account,
-                &self.state.people_list_state,
-                &self.state.people_view_state,
+                &self.state.person_list_state,
+                &self.state.person_view_state,
             ),
             SelectedTab::Expenses => self.tab.render_expenses(area, buf, &self.state.account),
             SelectedTab::Balance => self.tab.render_balance(area, buf, &self.state.account),
@@ -61,23 +61,23 @@ impl SelectedTab {
         format!("  {self}  ").fg(tailwind::SLATE.c50).into()
     }
 
-    /// Render the people tab
-    fn render_people(
+    /// Render the person tab
+    fn render_person(
         &self,
         area: Rect,
         buf: &mut Buffer,
         account: &Account,
         list_state: &ListState,
-        view_state: &PeopleViewState,
+        view_state: &PersonViewState,
     ) {
         match view_state {
-            PeopleViewState::List => {
-                PeopleTable::new(&account.persons, list_state)
+            PersonViewState::List => {
+                PersonTable::new(&account.persons, list_state)
                     .get()
                     .block(self.block())
                     .render(area, buf);
             }
-            PeopleViewState::EditForm => {
+            PersonViewState::EditForm => {
                 // Existing edit form code remains unchanged
                 if let Some(selected) = list_state.selected() {
                     if let Some(person) = account.persons.get(selected) {
@@ -165,7 +165,7 @@ impl SelectedTab {
 
     pub const fn palette(self) -> tailwind::Palette {
         match self {
-            Self::People => tailwind::YELLOW,
+            Self::Person => tailwind::YELLOW,
             Self::Expenses => tailwind::GREEN,
             Self::Balance => tailwind::RED,
             Self::Account => tailwind::GRAY,

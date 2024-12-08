@@ -1,6 +1,6 @@
 use crate::models::Account;
 use crate::selected_tab::SelectedTab;
-use crate::tab_widget::{PeopleViewState, TabWidget};
+use crate::tab_widget::{PersonViewState, TabWidget};
 use crossterm::event;
 use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::buffer::Buffer;
@@ -29,7 +29,7 @@ const PEOPLE_INFO_TEXT: [&str; 5] = [
 ];
 
 fn render_footer(area: Rect, buf: &mut Buffer, selected_tab: SelectedTab) {
-    if selected_tab == SelectedTab::People {
+    if selected_tab == SelectedTab::Person {
         Line::raw(PEOPLE_INFO_TEXT.join(" | "))
             .centered()
             .render(area, buf);
@@ -42,19 +42,19 @@ fn render_footer(area: Rect, buf: &mut Buffer, selected_tab: SelectedTab) {
 
 pub struct AppState {
     pub account: Account,
-    pub people_list_state: ListState,
-    pub people_view_state: PeopleViewState,
+    pub person_list_state: ListState,
+    pub person_view_state: PersonViewState,
 }
 
 impl AppState {
     fn new(account: Account) -> Self {
-        let mut people_list_state = ListState::default();
-        people_list_state.select(Some(0)); // Select first item by default
+        let mut person_list_state = ListState::default();
+        person_list_state.select(Some(0)); // Select first item by default
 
         Self {
             account,
-            people_list_state,
-            people_view_state: PeopleViewState::default(),
+            person_list_state,
+            person_view_state: PersonViewState::default(),
         }
     }
 }
@@ -69,7 +69,7 @@ impl App {
     pub fn new() -> Result<App, anyhow::Error> {
         Ok(App {
             state: AppState::new(Account::load_from_file()?),
-            selected_tab: SelectedTab::People,
+            selected_tab: SelectedTab::Person,
             exit: false,
         })
     }
@@ -106,39 +106,39 @@ impl App {
             KeyCode::Char('h') | KeyCode::Left => self.previous_tab(),
             KeyCode::Tab => {
                 self.selected_tab = match self.selected_tab {
-                    SelectedTab::People => SelectedTab::Expenses,
+                    SelectedTab::Person => SelectedTab::Expenses,
                     SelectedTab::Expenses => SelectedTab::Balance,
                     SelectedTab::Balance => SelectedTab::Account,
-                    SelectedTab::Account => SelectedTab::People,
+                    SelectedTab::Account => SelectedTab::Person,
                 }
             }
-            KeyCode::Up if self.selected_tab == SelectedTab::People => {
-                if let PeopleViewState::List = self.state.people_view_state {
-                    let current = self.state.people_list_state.selected().unwrap_or(0);
+            KeyCode::Up if self.selected_tab == SelectedTab::Person => {
+                if let PersonViewState::List = self.state.person_view_state {
+                    let current = self.state.person_list_state.selected().unwrap_or(0);
                     self.state
-                        .people_list_state
+                        .person_list_state
                         .select(Some(current.saturating_sub(1)));
                 }
             }
-            KeyCode::Down if self.selected_tab == SelectedTab::People => {
-                if let PeopleViewState::List = self.state.people_view_state {
-                    let current = self.state.people_list_state.selected().unwrap_or(0);
+            KeyCode::Down if self.selected_tab == SelectedTab::Person => {
+                if let PersonViewState::List = self.state.person_view_state {
+                    let current = self.state.person_list_state.selected().unwrap_or(0);
                     let max = self.state.account.persons.len().saturating_sub(1);
                     self.state
-                        .people_list_state
+                        .person_list_state
                         .select(Some(current.saturating_add(1).min(max)));
                 }
             }
-            KeyCode::Enter if self.selected_tab == SelectedTab::People => {
-                if let PeopleViewState::List = self.state.people_view_state {
-                    if self.state.people_list_state.selected().is_some() {
-                        self.state.people_view_state = PeopleViewState::EditForm;
+            KeyCode::Enter if self.selected_tab == SelectedTab::Person => {
+                if let PersonViewState::List = self.state.person_view_state {
+                    if self.state.person_list_state.selected().is_some() {
+                        self.state.person_view_state = PersonViewState::EditForm;
                     }
                 }
             }
-            KeyCode::Esc if self.selected_tab == SelectedTab::People => {
-                if let PeopleViewState::EditForm = self.state.people_view_state {
-                    self.state.people_view_state = PeopleViewState::List;
+            KeyCode::Esc if self.selected_tab == SelectedTab::Person => {
+                if let PersonViewState::EditForm = self.state.person_view_state {
+                    self.state.person_view_state = PersonViewState::List;
                 }
             }
             _ => {}
@@ -182,7 +182,7 @@ impl Widget for &App {
 
         render_title(title_area, buf);
         self.render_tabs(tabs_area, buf);
-        let _tab_widget = TabWidget {
+        TabWidget {
             tab: self.selected_tab,
             state: &self.state,
         }

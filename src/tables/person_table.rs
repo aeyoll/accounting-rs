@@ -7,13 +7,13 @@ use ratatui::{
     widgets::{Cell, ListState, Row, Table},
 };
 
-pub struct PeopleTable<'a> {
+pub struct PersonTable<'a> {
     pub persons: &'a Vec<Person>,
     pub state: &'a ListState,
     colors: TableColors,
 }
 
-impl<'a> PeopleTable<'a> {
+impl<'a> PersonTable<'a> {
     pub fn new(persons: &'a Vec<Person>, state: &'a ListState) -> Self {
         Self {
             persons,
