@@ -58,9 +58,7 @@ impl<'a> Widget for TabWidget<'a> {
 impl SelectedTab {
     /// Return tab's name as a styled `Line`
     pub fn title(self) -> Line<'static> {
-        format!("  {self}  ")
-            .fg(tailwind::SLATE.c50)
-            .into()
+        format!("  {self}  ").fg(tailwind::SLATE.c50).into()
     }
 
     /// Render the people tab
@@ -163,7 +161,6 @@ impl SelectedTab {
             .title(self.title())
             .title_alignment(ratatui::layout::Alignment::Center)
             .padding(Padding::uniform(1))
-
     }
 
     pub const fn palette(self) -> tailwind::Palette {
