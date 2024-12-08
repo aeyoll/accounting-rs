@@ -1,7 +1,7 @@
 use crate::models::Account;
 use crate::tab_widget::{PeopleViewState, TabWidget};
+use crate::tables::people_table::PeopleTable;
 use ratatui::buffer::Buffer;
-use ratatui::layout::Constraint;
 use ratatui::layout::Rect;
 use ratatui::prelude::{Color, Line, Span, Style, Stylize, Text, Widget};
 use ratatui::style::palette::tailwind;
@@ -12,14 +12,14 @@ use strum::{Display, EnumIter, FromRepr};
 #[derive(Default, Clone, Copy, Display, PartialEq, FromRepr, EnumIter)]
 pub enum SelectedTab {
     #[default]
-    #[strum(to_string = "Account")]
-    Account,
     #[strum(to_string = "People")]
     People,
     #[strum(to_string = "Expenses")]
     Expenses,
     #[strum(to_string = "Balance")]
     Balance,
+    #[strum(to_string = "Account")]
+    Account,
 }
 
 impl SelectedTab {
@@ -41,7 +41,6 @@ impl SelectedTab {
 impl<'a> Widget for TabWidget<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         match self.tab {
-            SelectedTab::Account => self.tab.render_account(area, buf, &self.state.account),
             SelectedTab::People => self.tab.render_people(
                 area,
                 buf,
@@ -51,6 +50,7 @@ impl<'a> Widget for TabWidget<'a> {
             ),
             SelectedTab::Expenses => self.tab.render_expenses(area, buf, &self.state.account),
             SelectedTab::Balance => self.tab.render_balance(area, buf, &self.state.account),
+            SelectedTab::Account => self.tab.render_account(area, buf, &self.state.account),
         }
     }
 }
@@ -59,8 +59,7 @@ impl SelectedTab {
     /// Return tab's name as a styled `Line`
     pub fn title(self) -> Line<'static> {
         format!("  {self}  ")
-            .fg(tailwind::SLATE.c200)
-            .bg(self.palette().c900)
+            .fg(tailwind::SLATE.c50)
             .into()
     }
 
@@ -75,25 +74,10 @@ impl SelectedTab {
     ) {
         match view_state {
             PeopleViewState::List => {
-                use ratatui::widgets::{Row, Table};
-
-                let header = Row::new(vec!["Name".bold(), "Income".bold()]);
-
-                let rows: Vec<Row> = account
-                    .persons
-                    .iter()
-                    .map(|p| Row::new(vec![p.name.clone(), format!("{:.2}€", p.income)]))
-                    .collect();
-
-                Table::new(
-                    rows,
-                    [Constraint::Percentage(50), Constraint::Percentage(50)],
-                )
-                .header(header)
-                .block(self.block())
-                .row_highlight_style(Style::default().bg(tailwind::YELLOW.c500))
-                .highlight_symbol("→ ")
-                .render(area, buf);
+                PeopleTable::new(&account.persons, list_state)
+                    .get()
+                    .block(self.block())
+                    .render(area, buf);
             }
             PeopleViewState::EditForm => {
                 // Existing edit form code remains unchanged
@@ -137,9 +121,7 @@ impl SelectedTab {
             })
             .collect();
 
-        List::new(items)
-            .block(Block::default().borders(Borders::ALL))
-            .render(area, buf);
+        List::new(items).block(self.block()).render(area, buf);
     }
 
     fn render_balance(&self, area: Rect, buf: &mut Buffer, account: &Account) {
@@ -157,9 +139,7 @@ impl SelectedTab {
             ]),
         ]);
 
-        Paragraph::new(text)
-            .block(Block::default().borders(Borders::ALL))
-            .render(area, buf);
+        Paragraph::new(text).block(self.block()).render(area, buf);
     }
 
     fn render_account(&self, area: Rect, buf: &mut Buffer, account: &Account) {
@@ -168,28 +148,30 @@ impl SelectedTab {
             Span::styled(account.name.to_string(), Style::default().fg(Color::Yellow)),
         ])]);
 
-        let block = Block::default().borders(Borders::ALL);
-
         Paragraph::new(text)
             .centered()
-            .block(block)
+            .block(self.block())
             .render(area, buf);
     }
 
     /// A block surrounding the tab's content
     fn block(self) -> Block<'static> {
         Block::bordered()
-            .border_set(symbols::border::PROPORTIONAL_TALL)
+            .border_set(symbols::border::PLAIN)
             .padding(Padding::horizontal(1))
             .border_style(self.palette().c700)
+            .title(self.title())
+            .title_alignment(ratatui::layout::Alignment::Center)
+            .padding(Padding::uniform(1))
+
     }
 
     pub const fn palette(self) -> tailwind::Palette {
         match self {
-            Self::Account => tailwind::GRAY,
             Self::People => tailwind::YELLOW,
             Self::Expenses => tailwind::GREEN,
             Self::Balance => tailwind::RED,
+            Self::Account => tailwind::GRAY,
         }
     }
 }

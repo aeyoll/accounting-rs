@@ -6,6 +6,7 @@ mod handlers;
 mod models;
 mod selected_tab;
 mod tab_widget;
+mod tables;
 mod tui;
 mod validators;
 

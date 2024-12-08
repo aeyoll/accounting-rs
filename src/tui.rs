@@ -1,4 +1,3 @@
-use std::cmp::PartialEq;
 use crate::models::Account;
 use crate::selected_tab::SelectedTab;
 use crate::tab_widget::{PeopleViewState, TabWidget};
@@ -70,7 +69,7 @@ impl App {
     pub fn new() -> Result<App, anyhow::Error> {
         Ok(App {
             state: AppState::new(Account::load_from_file()?),
-            selected_tab: SelectedTab::Account,
+            selected_tab: SelectedTab::People,
             exit: false,
         })
     }
@@ -107,10 +106,10 @@ impl App {
             KeyCode::Char('h') | KeyCode::Left => self.previous_tab(),
             KeyCode::Tab => {
                 self.selected_tab = match self.selected_tab {
-                    SelectedTab::Account => SelectedTab::People,
                     SelectedTab::People => SelectedTab::Expenses,
                     SelectedTab::Expenses => SelectedTab::Balance,
                     SelectedTab::Balance => SelectedTab::Account,
+                    SelectedTab::Account => SelectedTab::People,
                 }
             }
             KeyCode::Up if self.selected_tab == SelectedTab::People => {
@@ -183,7 +182,7 @@ impl Widget for &App {
 
         render_title(title_area, buf);
         self.render_tabs(tabs_area, buf);
-        let tab_widget = TabWidget {
+        let _tab_widget = TabWidget {
             tab: self.selected_tab,
             state: &self.state,
         }
